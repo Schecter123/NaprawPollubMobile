@@ -16,23 +16,30 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.ParseException;
+import java.util.regex.Pattern;
+
 public class RegisterActivity extends AppCompatActivity {
     private static final String KEY_STATUS = "status";
     private static final String KEY_MESSAGE = "message";
-    private static final String KEY_FULL_NAME = "full_name";
+    private static final String KEY_NAME = "name";
+    private static final String KEY_SURNAME = "surname";
     private static final String KEY_USERNAME = "username";
     private static final String KEY_PASSWORD = "password";
+    private static final String KEY_EMAIL = "email";
     private static final String KEY_EMPTY = "";
     private EditText etUsername;
     private EditText etPassword;
-    private EditText etConfirmPassword;
-    private EditText etFullName;
+    private EditText etEmail;
+    private EditText etName;
+    private EditText etSurname;
     private String username;
     private String password;
-    private String confirmPassword;
-    private String fullName;
+    private String email;
+    private String name;
+    private String surname;
     private ProgressDialog pDialog;
-    private String register_url = "http://localhost:8000/api/auth/signup/";
+    private String register_url = "http://192.168.0.10:8000/api/auth/signup/";
     private SessionHandler session;
 
     @Override
@@ -43,13 +50,13 @@ public class RegisterActivity extends AppCompatActivity {
 
         etUsername = findViewById(R.id.etUsername);
         etPassword = findViewById(R.id.etPassword);
-        etConfirmPassword = findViewById(R.id.etConfirmPassword);
-        etFullName = findViewById(R.id.etFullName);
+        etName = findViewById(R.id.etName);
+        etSurname = findViewById(R.id.etSurname);
+        etEmail = findViewById(R.id.etEmail);
 
         Button login = findViewById(R.id.btnRegisterLogin);
         Button register = findViewById(R.id.btnRegister);
 
-        //Launch Login screen when Login Button is clicked
         login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -62,50 +69,44 @@ public class RegisterActivity extends AppCompatActivity {
         register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Retrieve the data entered in the edit texts
                 username = etUsername.getText().toString().toLowerCase().trim();
                 password = etPassword.getText().toString().trim();
-                confirmPassword = etConfirmPassword.getText().toString().trim();
-                fullName = etFullName.getText().toString().trim();
+                name = etName.getText().toString().trim();
+                surname = etSurname.getText().toString().trim();
+                email = etEmail.getText().toString().trim();
                 if (validateInputs()) {
                     registerUser();
                 }
-
             }
         });
 
     }
 
-    /**
-     * Display Progress bar while registering
-     */
     private void displayLoader() {
         pDialog = new ProgressDialog(RegisterActivity.this);
-        pDialog.setMessage("Signing Up.. Please wait...");
+        pDialog.setMessage("Rejestrowanie trwa proszę czekać");
         pDialog.setIndeterminate(false);
         pDialog.setCancelable(false);
         pDialog.show();
-
     }
 
-    /**
-     * Launch Dashboard Activity on Successful Sign Up
-     */
     private void loadDashboard() {
         Intent i = new Intent(getApplicationContext(), DashboardActivity.class);
         startActivity(i);
         finish();
-
     }
 
     private void registerUser() {
         displayLoader();
         JSONObject request = new JSONObject();
         try {
-            //Populate the request parameters
-            request.put(KEY_USERNAME, username);
+            request.put("id", null);
+            request.put("type", "0");
+            request.put("login", username);
             request.put(KEY_PASSWORD, password);
-            request.put(KEY_FULL_NAME, fullName);
+            request.put(KEY_EMAIL, email);
+            request.put(KEY_NAME, name);
+            request.put(KEY_SURNAME, surname);
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -116,23 +117,21 @@ public class RegisterActivity extends AppCompatActivity {
                     public void onResponse(JSONObject response) {
                         pDialog.dismiss();
                         try {
-                            //Check if user got registered successfully
                             if (response.getInt(KEY_STATUS) == 0) {
-                                //Set the user session
-                                session.loginUser(username,fullName);
+                                session.loginUser(username, response);
                                 loadDashboard();
 
                             }else if(response.getInt(KEY_STATUS) == 1){
-                                //Display error message if username is already existsing
                                 etUsername.setError("Username already taken!");
                                 etUsername.requestFocus();
 
                             }else{
                                 Toast.makeText(getApplicationContext(),
                                         response.getString(KEY_MESSAGE), Toast.LENGTH_SHORT).show();
-
                             }
                         } catch (JSONException e) {
+                            e.printStackTrace();
+                        } catch (ParseException e) {
                             e.printStackTrace();
                         }
                     }
@@ -142,47 +141,53 @@ public class RegisterActivity extends AppCompatActivity {
                     public void onErrorResponse(VolleyError error) {
                         pDialog.dismiss();
 
-                        //Display error message whenever an error occurs
                         Toast.makeText(getApplicationContext(),
-                                error.getMessage(), Toast.LENGTH_SHORT).show();
+                                "Błąd rejestracji", Toast.LENGTH_SHORT).show();
 
                     }
                 });
 
-        // Access the RequestQueue through your singleton class.
         MySingleton.getInstance(this).addToRequestQueue(jsArrayRequest);
     }
 
-    /**
-     * Validates inputs and shows error if any
-     * @return
-     */
-    private boolean validateInputs() {
-        if (KEY_EMPTY.equals(fullName)) {
-            etFullName.setError("Full Name cannot be empty");
-            etFullName.requestFocus();
-            return false;
+    private static boolean isValid(String email)
+    {
+        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\."+
+                "[a-zA-Z0-9_+&*-]+)*@" +
+                "(?:[a-zA-Z0-9-]+\\.)+[a-z" +
+                "A-Z]{2,7}$";
 
-        }
+        Pattern pat = Pattern.compile(emailRegex);
+        if (email == null)
+            return false;
+        return pat.matcher(email).matches();
+    }
+
+    private boolean validateInputs() {
+//        if (KEY_EMPTY.equals(name)) {
+//            etName.setError("Full Name cannot be empty");
+//            etName.requestFocus();
+//            return false;
+//        }
+//        if (KEY_EMPTY.equals(surname)) {
+//            etSurname.setError("Full Name cannot be empty");
+//            etSurname.requestFocus();
+//            return false;
+//        }
         if (KEY_EMPTY.equals(username)) {
-            etUsername.setError("Username cannot be empty");
+            etUsername.setError("Nazwa użytkownika nie może być pusta");
             etUsername.requestFocus();
             return false;
         }
         if (KEY_EMPTY.equals(password)) {
-            etPassword.setError("Password cannot be empty");
+            etPassword.setError("Hasło nie może być puste");
             etPassword.requestFocus();
             return false;
         }
 
-        if (KEY_EMPTY.equals(confirmPassword)) {
-            etConfirmPassword.setError("Confirm Password cannot be empty");
-            etConfirmPassword.requestFocus();
-            return false;
-        }
-        if (!password.equals(confirmPassword)) {
-            etConfirmPassword.setError("Password and Confirm Password does not match");
-            etConfirmPassword.requestFocus();
+        if (KEY_EMPTY.equals(email) && isValid(email)) {
+            etPassword.setError("Email niepoprawny");
+            etPassword.requestFocus();
             return false;
         }
 

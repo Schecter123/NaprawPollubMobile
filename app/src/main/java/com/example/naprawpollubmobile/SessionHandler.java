@@ -3,13 +3,21 @@ package com.example.naprawpollubmobile;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 public class SessionHandler {
     private static final String PREF_NAME = "UserSession";
     private static final String KEY_USERNAME = "username";
-    private static final String KEY_EXPIRES = "expires";
+    private static final String KEY_EXPIRES = "expires_at";
     private static final String KEY_FULL_NAME = "full_name";
+    private static final String KEY_ID = "id";
     private static final String KEY_EMPTY = "";
     private Context mContext;
     private SharedPreferences.Editor mEditor;
@@ -21,68 +29,58 @@ public class SessionHandler {
         this.mEditor = mPreferences.edit();
     }
 
-    /**
-     * Logs in the user by saving user details and setting session
-     *
-     * @param username
-     * @param fullName
-     */
-    public void loginUser(String username, String fullName) {
-        mEditor.putString(KEY_USERNAME, username);
-        mEditor.putString(KEY_FULL_NAME, fullName);
-        Date date = new Date();
 
-        //Set user session for next 7 days
-        long millis = date.getTime() + (7 * 24 * 60 * 60 * 1000);
-        mEditor.putLong(KEY_EXPIRES, millis);
+    public void loginUser(String username, JSONObject response) throws JSONException, ParseException {
+        String expiresAt = response.getString(KEY_EXPIRES);
+        String userData = response.getString("user");
+        String idFromResponse = userData.substring(6, 7);
+
+        mEditor.putString(KEY_USERNAME, username);
+        mEditor.putString(KEY_EXPIRES, expiresAt);
+        mEditor.putString(KEY_ID, idFromResponse);
+
         mEditor.commit();
     }
 
-    /**
-     * Checks whether user is logged in
-     *
-     * @return
-     */
-    public boolean isLoggedIn() {
+    public boolean isLoggedIn() throws ParseException {
         Date currentDate = new Date();
 
-        long millis = mPreferences.getLong(KEY_EXPIRES, 0);
+        String expiration = mPreferences.getString(KEY_EXPIRES, KEY_EMPTY);
 
-        /* If shared preferences does not have a value
-         then user is not logged in
-         */
-        if (millis == 0) {
+        if (expiration.isEmpty()) {
             return false;
         }
-        Date expiryDate = new Date(millis);
 
-        /* Check if session is expired by comparing
-        current date and Session expiry date
-        */
-        return currentDate.before(expiryDate);
+        DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+        Date dateExpireToken = format.parse(expiration);
+        if (dateExpireToken.after(currentDate)) {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
-    /**
-     * Fetches and returns user details
-     *
-     * @return user details
-     */
-    public User getUserDetails() {
-        //Check if user is logged in first
+
+    public User getUserDetails() throws ParseException {
         if (!isLoggedIn()) {
             return null;
         }
         User user = new User();
         user.setUsername(mPreferences.getString(KEY_USERNAME, KEY_EMPTY));
-        user.setFullName(mPreferences.getString(KEY_FULL_NAME, KEY_EMPTY));
-        user.setSessionExpiryDate(new Date(mPreferences.getLong(KEY_EXPIRES, 0)));
+
+        String expiration = mPreferences.getString(KEY_EXPIRES, KEY_EMPTY);
+
+
+        DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+        Date dateExpireToken = format.parse(expiration);
+
+        user.setSessionExpiryDate(dateExpireToken);
 
         return user;
     }
 
-    /**
-     * Logs out user by clearing the session
-     */
+
     public void logoutUser(){
         mEditor.clear();
         mEditor.commit();

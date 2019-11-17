@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">NaprawPollubMobile</string>
-    <string name="username">Nazwa użytkownika</string>
+    <string name="username">Login</string>
     <string name="password">Hasło</string>
     <string name="sign_in">Zaloguj się</string>
     <string name="register">Rejestracja</string>
@@ -11,4 +11,7 @@
     <string name="not_having_account">Nie masz konta?</string>
     <string name="sign_up">Zarejestruj się</string>
     <string name="logout">Wyloguj się</string>
+    <string name="name">Imię</string>
+    <string name="surname">Nazwisko</string>
+    <string name="email">E-mail</string>
 </resources>

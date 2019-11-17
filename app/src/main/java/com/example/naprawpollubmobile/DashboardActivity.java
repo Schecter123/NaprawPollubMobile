@@ -8,10 +8,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.naprawpollubmobile.MainActivity;
-import com.example.naprawpollubmobile.R;
-import com.example.naprawpollubmobile.SessionHandler;
-import com.example.naprawpollubmobile.User;
+import java.text.ParseException;
 
 public class DashboardActivity extends AppCompatActivity {
     private SessionHandler session;
@@ -21,10 +18,15 @@ public class DashboardActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
         session = new SessionHandler(getApplicationContext());
-        User user = session.getUserDetails();
+        User user = null;
+        try {
+            user = session.getUserDetails();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         TextView welcomeText = findViewById(R.id.welcomeText);
 
-        welcomeText.setText("Welcome "+user.getFullName()+", your session will expire on "+user.getSessionExpiryDate());
+        welcomeText.setText("Welcome "+user.getUsername()+", twoja sesja wygaśnie: "+user.getSessionExpiryDate());
 
         Button logoutBtn = findViewById(R.id.btnLogout);
 

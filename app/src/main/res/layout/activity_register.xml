@@ -21,17 +21,6 @@
         android:textSize="26sp"
         android:textStyle="bold" />
 
-
-    <EditText
-        android:id="@+id/etFullName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:background="@android:color/white"
-        android:hint="@string/full_name"
-        android:inputType="textPersonName"
-        android:padding="10dp" />
-
     <EditText
         android:id="@+id/etUsername"
         android:layout_width="match_parent"
@@ -42,6 +31,35 @@
         android:inputType="textPersonName"
         android:padding="10dp" />
 
+    <EditText
+        android:id="@+id/etName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:background="@android:color/white"
+        android:hint="@string/name"
+        android:inputType="textPersonName"
+        android:padding="10dp" />
+
+    <EditText
+        android:id="@+id/etSurname"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:background="@android:color/white"
+        android:hint="@string/surname"
+        android:inputType="textPersonName"
+        android:padding="10dp" />
+
+    <EditText
+        android:id="@+id/etEmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:background="@android:color/white"
+        android:hint="@string/email"
+        android:inputType="textPersonName"
+        android:padding="10dp" />
 
     <EditText
         android:id="@+id/etPassword"
@@ -50,16 +68,6 @@
         android:layout_margin="5dp"
         android:background="@android:color/white"
         android:hint="@string/password"
-        android:inputType="textPassword"
-        android:padding="10dp" />
-
-    <EditText
-        android:id="@+id/etConfirmPassword"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:background="@android:color/white"
-        android:hint="@string/confirm_password"
         android:inputType="textPassword"
         android:padding="10dp" />
 

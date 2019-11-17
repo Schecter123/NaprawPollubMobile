@@ -9,22 +9,22 @@ import android.widget.EditText;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.android.volley.Request;
-import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.InetAddress;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String KEY_STATUS = "status";
+    private static final String EXPIRES_AT = "expires_at";
     private static final String KEY_MESSAGE = "message";
-    private static final String KEY_FULL_NAME = "full_name";
     private static final String KEY_USERNAME = "login";
     private static final String KEY_PASSWORD = "password";
     private static final String REMEMBER_ME = "remember_me";
@@ -42,8 +42,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         session = new SessionHandler(getApplicationContext());
 
-        if(session.isLoggedIn()){
-            loadDashboard();
+        try {
+            if(session.isLoggedIn()){
+                loadDashboard();
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
         setContentView(R.layout.activity_main);
 
@@ -53,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
         Button register = findViewById(R.id.btnLoginRegister);
         Button login = findViewById(R.id.btnLogin);
 
-        //Launch Registration screen when Register Button is clicked
         register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -66,7 +69,6 @@ public class MainActivity extends AppCompatActivity {
         login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Retrieve the data entered in the edit texts
                 username = etUsername.getText().toString().toLowerCase().trim();
                 password = etPassword.getText().toString().trim();
                 if (validateInputs()) {
@@ -76,19 +78,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * Launch Dashboard Activity on Successful Login
-     */
     private void loadDashboard() {
         Intent i = new Intent(getApplicationContext(), DashboardActivity.class);
         startActivity(i);
         finish();
 
     }
-
-    /**
-     * Display Progress bar while Logging in
-     */
 
     private void displayLoader() {
         pDialog = new ProgressDialog(MainActivity.this);
@@ -103,7 +98,6 @@ public class MainActivity extends AppCompatActivity {
         displayLoader();
         JSONObject request = new JSONObject();
         try {
-            //Populate the request parameters
             request.put(KEY_USERNAME, username);
             request.put(KEY_PASSWORD, password);
             request.put(REMEMBER_ME, false);
@@ -117,10 +111,12 @@ public class MainActivity extends AppCompatActivity {
                     public void onResponse(JSONObject response) {
                         pDialog.dismiss();
                         try {
-                            //Check if user got logged in successfully
-
-                            if (response.getInt(KEY_STATUS) == 0) {
-                                session.loginUser(username,response.getString(KEY_FULL_NAME));
+                            String expiresAt = response.getString(EXPIRES_AT);
+                            DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+                            Date dateExpireToken = format.parse(expiresAt);
+                            Date dateNow = new Date();
+                            if (dateExpireToken.after(dateNow)) {
+                                session.loginUser(username, response);
                                 loadDashboard();
 
                             }else{
@@ -129,6 +125,8 @@ public class MainActivity extends AppCompatActivity {
 
                             }
                         } catch (JSONException e) {
+                            e.printStackTrace();
+                        } catch (ParseException e) {
                             e.printStackTrace();
                         }
                     }
@@ -144,55 +142,18 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
-        // Access the RequestQueue through your singleton class.
         MySingleton.getInstance(this).addToRequestQueue(jsArrayRequest);
 
-/*        RequestQueue queue = Volley.newRequestQueue(this);
-        String url ="http://www.google.com";
-
-// Request a string response from the provided URL.
-        JSONObject request = new JSONObject();
-        try {
-            //Populate the request parameters
-            request.put(KEY_USERNAME, username);
-            request.put(KEY_PASSWORD, password);
-            request.put(REMEMBER_ME, false);
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, login_url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        // Display the first 500 characters of the response string.
-                        String a = response.substring(0,500);
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                String b = "ups";
-            }
-        });
-
-        // Add the request to the RequestQueue.
-        queue.add(stringRequest);*/
     }
 
-    /**
-     * Validates inputs and shows error if any
-     * @return
-     */
     private boolean validateInputs() {
         if(KEY_EMPTY.equals(username)){
-            etUsername.setError("Username cannot be empty");
+            etUsername.setError("Nazwa użytkownika nie poprawna");
             etUsername.requestFocus();
             return false;
         }
         if(KEY_EMPTY.equals(password)){
-            etPassword.setError("Password cannot be empty");
+            etPassword.setError("Hasło niepoprawne");
             etPassword.requestFocus();
             return false;
         }

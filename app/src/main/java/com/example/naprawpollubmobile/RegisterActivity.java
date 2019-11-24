@@ -24,7 +24,7 @@ public class RegisterActivity extends AppCompatActivity {
     private static final String KEY_MESSAGE = "message";
     private static final String KEY_NAME = "name";
     private static final String KEY_SURNAME = "surname";
-    private static final String KEY_USERNAME = "username";
+    private static final String KEY_USERNAME = "login";
     private static final String KEY_PASSWORD = "password";
     private static final String KEY_EMAIL = "email";
     private static final String KEY_EMPTY = "";
@@ -102,7 +102,7 @@ public class RegisterActivity extends AppCompatActivity {
         try {
             request.put("id", null);
             request.put("type", "0");
-            request.put("login", username);
+            request.put(KEY_USERNAME, username);
             request.put(KEY_PASSWORD, password);
             request.put(KEY_EMAIL, email);
             request.put(KEY_NAME, name);
@@ -117,21 +117,18 @@ public class RegisterActivity extends AppCompatActivity {
                     public void onResponse(JSONObject response) {
                         pDialog.dismiss();
                         try {
-                            if (response.getInt(KEY_STATUS) == 0) {
-                                session.loginUser(username, response);
-                                loadDashboard();
-
-                            }else if(response.getInt(KEY_STATUS) == 1){
-                                etUsername.setError("Username already taken!");
-                                etUsername.requestFocus();
-
+                            String lastIdUser = response.getString("lastUserId");
+                            String idFromResponse = stripNonDigits(lastIdUser);
+                            int lasIdUserInt = Integer.parseInt(idFromResponse);
+                            if (lasIdUserInt > 0) {
+                                Toast.makeText(getApplicationContext(),"Powodzenie rejestracji", Toast.LENGTH_SHORT).show();
+                                Intent i = new Intent(RegisterActivity.this, MainActivity.class);
+                                startActivity(i);
+                                finish();
                             }else{
-                                Toast.makeText(getApplicationContext(),
-                                        response.getString(KEY_MESSAGE), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(),"Błąd rejestracji", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException e) {
-                            e.printStackTrace();
-                        } catch (ParseException e) {
                             e.printStackTrace();
                         }
                     }
@@ -141,13 +138,22 @@ public class RegisterActivity extends AppCompatActivity {
                     public void onErrorResponse(VolleyError error) {
                         pDialog.dismiss();
 
-                        Toast.makeText(getApplicationContext(),
-                                "Błąd rejestracji", Toast.LENGTH_SHORT).show();
-
+                        Toast.makeText(getApplicationContext(),"Błąd rejestracji", Toast.LENGTH_SHORT).show();
                     }
                 });
 
         MySingleton.getInstance(this).addToRequestQueue(jsArrayRequest);
+    }
+
+    public static String stripNonDigits(final CharSequence input ){
+        final StringBuilder sb = new StringBuilder(input.length());
+        for(int i = 0; i < input.length(); i++){
+            final char c = input.charAt(i);
+            if(c > 47 && c < 58){
+                sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 
     private static boolean isValid(String email)

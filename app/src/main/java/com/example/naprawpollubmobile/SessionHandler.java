@@ -33,13 +33,24 @@ public class SessionHandler {
     public void loginUser(String username, JSONObject response) throws JSONException, ParseException {
         String expiresAt = response.getString(KEY_EXPIRES);
         String userData = response.getString("user");
-        String idFromResponse = userData.substring(6, 7);
+        String idFromResponse = stripNonDigits(userData);
 
         mEditor.putString(KEY_USERNAME, username);
         mEditor.putString(KEY_EXPIRES, expiresAt);
         mEditor.putString(KEY_ID, idFromResponse);
 
         mEditor.commit();
+    }
+
+    public static String stripNonDigits(final CharSequence input ){
+        final StringBuilder sb = new StringBuilder(input.length());
+        for(int i = 0; i < input.length(); i++){
+            final char c = input.charAt(i);
+            if(c > 47 && c < 58){
+                sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 
     public boolean isLoggedIn() throws ParseException {

@@ -17,6 +17,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.ParseException;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RegisterActivity extends AppCompatActivity {
@@ -156,19 +157,6 @@ public class RegisterActivity extends AppCompatActivity {
         return sb.toString();
     }
 
-    private static boolean isValid(String email)
-    {
-        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\."+
-                "[a-zA-Z0-9_+&*-]+)*@" +
-                "(?:[a-zA-Z0-9-]+\\.)+[a-z" +
-                "A-Z]{2,7}$";
-
-        Pattern pat = Pattern.compile(emailRegex);
-        if (email == null)
-            return false;
-        return pat.matcher(email).matches();
-    }
-
     private boolean validateInputs() {
 //        if (KEY_EMPTY.equals(name)) {
 //            etName.setError("Full Name cannot be empty");
@@ -191,9 +179,16 @@ public class RegisterActivity extends AppCompatActivity {
             return false;
         }
 
-        if (KEY_EMPTY.equals(email) && isValid(email)) {
-            etPassword.setError("Email niepoprawny");
-            etPassword.requestFocus();
+        String regex = "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^-]+(?:\\.[a-zA-Z0-9_!#$%&'*+/=?`{|}~^-]+)*@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$";
+
+        Pattern pattern = Pattern.compile(regex);
+
+        Matcher matcher = pattern.matcher(email);
+        boolean doesMatch = matcher.matches();
+
+        if (KEY_EMPTY.equals(email) && !doesMatch) {
+            etEmail.setError("Email niepoprawny");
+            etEmail.requestFocus();
             return false;
         }
 

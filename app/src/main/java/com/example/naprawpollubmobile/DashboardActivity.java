@@ -26,7 +26,7 @@ public class DashboardActivity extends AppCompatActivity {
         }
         TextView welcomeText = findViewById(R.id.welcomeText);
 
-        welcomeText.setText("Welcome "+user.getUsername()+", twoja sesja wygaśnie: "+user.getSessionExpiryDate());
+        welcomeText.setText("Witaj "+user.getUsername()+", twoja sesja wygaśnie: "+user.getSessionExpiryDate());
 
         Button logoutBtn = findViewById(R.id.btnLogout);
 

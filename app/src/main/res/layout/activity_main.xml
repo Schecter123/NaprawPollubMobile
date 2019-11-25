@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#304769"
+    android:background="#F1F3F4"
     android:gravity="center_vertical"
     android:orientation="vertical"
     android:padding="50dp"
@@ -43,7 +43,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="5dp"
-        android:background="#f05924"
+        android:background="#28a746"
         android:text="@string/sign_in"
         android:textColor="@android:color/white" />
     <TextView
@@ -52,14 +52,14 @@
         android:gravity="center"
         android:layout_marginTop="20dp"
         android:text="@string/not_having_account"
-        android:textColor="#ccc" />
+        android:textColor="#000" />
 
     <Button
         android:id="@+id/btnLoginRegister"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="5dp"
-        android:background="#aaa"
+        android:background="#75c687"
         android:text="@string/register"
         android:textColor="@android:color/white" />
 

@@ -82,7 +82,6 @@ public class MainActivity extends AppCompatActivity {
         Intent i = new Intent(getApplicationContext(), DashboardActivity.class);
         startActivity(i);
         finish();
-
     }
 
     private void displayLoader() {

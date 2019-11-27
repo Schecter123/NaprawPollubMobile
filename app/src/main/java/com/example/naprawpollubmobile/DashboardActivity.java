@@ -37,7 +37,17 @@ public class DashboardActivity extends AppCompatActivity {
                 Intent i = new Intent(DashboardActivity.this, MainActivity.class);
                 startActivity(i);
                 finish();
+            }
+        });
 
+        Button listBtn =  findViewById(R.id.btnList);
+
+        listBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(DashboardActivity.this, DefectListActivity.class);
+                startActivity(i);
+                finish();
             }
         });
     }

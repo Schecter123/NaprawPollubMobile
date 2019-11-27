@@ -14,4 +14,7 @@
     <string name="name">Imię</string>
     <string name="surname">Nazwisko</string>
     <string name="email">E-mail</string>
+    <string name="place">Wybierz miejsce usterki</string>
+    <string name="type">Wybierz typ usterki</string>
+
 </resources>

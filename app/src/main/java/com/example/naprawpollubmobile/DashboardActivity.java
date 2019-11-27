@@ -26,7 +26,17 @@ public class DashboardActivity extends AppCompatActivity {
         }
         TextView welcomeText = findViewById(R.id.welcomeText);
 
-        welcomeText.setText("Witaj "+user.getUsername()+", twoja sesja wygaśnie: "+user.getSessionExpiryDate());
+        welcomeText.setText("Witaj " + user.getUsername() + ", twoja sesja wygaśnie: " + user.getSessionExpiryDate());
+
+        Button addBtn = findViewById(R.id.btnAdd);
+
+        addBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(DashboardActivity.this, AddDefectActivity.class);
+                startActivity(i);
+            }
+        });
 
         Button logoutBtn = findViewById(R.id.btnLogout);
 

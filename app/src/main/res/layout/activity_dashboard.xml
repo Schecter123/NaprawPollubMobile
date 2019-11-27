@@ -14,21 +14,21 @@
         android:padding="20dp" />
 
     <Button
-        android:id="@+id/btnAdd"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:background="#aaa"
-        android:text="Dodaj usterkę"
-        android:textColor="@android:color/white" />
+    android:id="@+id/btnLogout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="5dp"
+    android:background="#aaa"
+    android:text="@string/logout"
+    android:textColor="@android:color/white" />
 
     <Button
-        android:id="@+id/btnLogout"
+        android:id="@+id/btnList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="5dp"
         android:background="#aaa"
-        android:text="@string/logout"
+        android:text="Lista usterek"
         android:textColor="@android:color/white" />
 
 </LinearLayout>

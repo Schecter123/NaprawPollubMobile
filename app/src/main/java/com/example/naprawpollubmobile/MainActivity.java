@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private String username;
     private String password;
     private ProgressDialog pDialog;
-    private String login_url = "http://192.168.0.10:8000/api/auth/login/";
+    private String login_url = "http://192.168.0.24:8000/api/auth/login/";
     private SessionHandler session;
 
     @Override
@@ -82,7 +82,6 @@ public class MainActivity extends AppCompatActivity {
         Intent i = new Intent(getApplicationContext(), DashboardActivity.class);
         startActivity(i);
         finish();
-
     }
 
     private void displayLoader() {

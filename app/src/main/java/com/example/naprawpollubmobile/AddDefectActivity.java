@@ -42,10 +42,13 @@ public class AddDefectActivity extends AppCompatActivity {
 
     private String place;
     private int idPlace;
+    private String username;
+    private int idUser;
     private String room;
+    private int idRoom;
     private String type;
+    private int defectTypeId;
     private String content;
-    private String add_defect_url = "http://192.168.1.116:8000/api/v1/defects/";
     private SessionHandler session;
 
     @Override
@@ -54,6 +57,13 @@ public class AddDefectActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_defect);
 
         session = new SessionHandler(getApplicationContext());
+        User user = null;
+        try {
+            user = session.getUserDetails();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        username = user.getUsername();
 
 
         //EditText
@@ -103,7 +113,8 @@ public class AddDefectActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 // On selecting a spinner item
-                room = adapterView.getItemAtPosition(i).toString();
+                room = ((Room) spinnerRoom.getSelectedItem()).getName();
+                idRoom = ((Room) spinnerRoom.getSelectedItem()).getId();
 
                 // Showing selected spinner item
                 Toast.makeText(adapterView.getContext(), "Selected: " + type, Toast.LENGTH_LONG).show();
@@ -122,6 +133,7 @@ public class AddDefectActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 // On selecting a spinner item
                 type = adapterView.getItemAtPosition(i).toString();
+                defectTypeId = i + 1;
 
                 // Showing selected spinner item
                 Toast.makeText(adapterView.getContext(), "Selected: " + type, Toast.LENGTH_LONG).show();
@@ -129,28 +141,31 @@ public class AddDefectActivity extends AppCompatActivity {
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
+                defectTypeId = 1;
 
             }
         });
+
+        getUserId();
 
 
         btnAddDefect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                //tvTest.setText(place + "," + type + ",");
+                tvTest.setVisibility(View.VISIBLE);
+                content = etContent.getText().toString();
+                addDefect();
             }
         });
 
 
     }
 
-
     public void setSpinnerType(List type) {
         type.add("Komputery");
+        type.add("Infrastruktora");
         type.add("Elektroniczny");
         type.add("Hydrauliczny");
-        type.add("Infrastruktora");
         type.add("Mechaniczny");
         type.add("Inny");
         ArrayAdapter<String> dataAdapter2 = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, type);
@@ -209,5 +224,50 @@ public class AddDefectActivity extends AppCompatActivity {
 
     }
 
+    public void getUserId() {
 
+        String URL = "http://192.168.1.116:8000/api/v1/users/" + username + "/login";
+        Ion.with(AddDefectActivity.this).load(URL).asJsonObject().setCallback(new FutureCallback<JsonObject>() {
+            @Override
+            public void onCompleted(Exception e, JsonObject result) {
+                try {
+                    idUser = result.get("id").getAsInt();
+                } catch (Exception erro) {
+
+                }
+            }
+        });
+
+
+    }
+
+    public void addDefect() {
+        String URL = "http://192.168.1.116:8000/api/v1/defects";
+
+        Ion.with(AddDefectActivity.this)
+                .load("POST", URL)
+                .setBodyParameter("defectType", String.valueOf(defectTypeId))
+                .setBodyParameter("idPlace", String.valueOf(idPlace))
+                .setBodyParameter("idUser", String.valueOf(idUser))
+                .setBodyParameter("idRoom", String.valueOf(idRoom))
+                .setBodyParameter("idMarker", "2")
+                .setBodyParameter("defectState", "ForRepair")
+                .setBodyParameter("description", content)
+                .setBodyParameter("date", "2019-02-08 13:07:00")
+                .setBodyParameter("photoURL", "")
+                .asJsonObject()
+                .setCallback(new FutureCallback<JsonObject>() {
+                    @Override
+                    public void onCompleted(Exception e, JsonObject result) {
+                        try {
+                            Toast.makeText(AddDefectActivity.this, "Hurra" + type, Toast.LENGTH_LONG).show();
+
+                        } catch (Exception erro) {
+                            Toast.makeText(AddDefectActivity.this, "Nie Hurra" + type, Toast.LENGTH_LONG).show();
+
+                        }
+                    }
+                });
+    }
 }
+

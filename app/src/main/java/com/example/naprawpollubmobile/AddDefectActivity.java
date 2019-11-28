@@ -27,8 +27,11 @@ import com.koushikdutta.ion.Ion;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 public class AddDefectActivity extends AppCompatActivity {
@@ -48,6 +51,7 @@ public class AddDefectActivity extends AppCompatActivity {
     private int idRoom;
     private String type;
     private int defectTypeId;
+    private int idMarker;
     private String content;
     private SessionHandler session;
 
@@ -98,8 +102,7 @@ public class AddDefectActivity extends AppCompatActivity {
                 place = ((Place) spinnerPlace.getSelectedItem()).getName();
                 idPlace = ((Place) spinnerPlace.getSelectedItem()).getId();
 
-                // Showing selected spinner item
-                Toast.makeText(adapterView.getContext(), "Selected: " + place, Toast.LENGTH_LONG).show();
+                getIdMarker();
                 getAllRoomsForSpinner(roomSp, idPlace);
             }
 
@@ -115,9 +118,6 @@ public class AddDefectActivity extends AppCompatActivity {
                 // On selecting a spinner item
                 room = ((Room) spinnerRoom.getSelectedItem()).getName();
                 idRoom = ((Room) spinnerRoom.getSelectedItem()).getId();
-
-                // Showing selected spinner item
-                Toast.makeText(adapterView.getContext(), "Selected: " + type, Toast.LENGTH_LONG).show();
 
                 roomSp.clear();
             }
@@ -135,8 +135,6 @@ public class AddDefectActivity extends AppCompatActivity {
                 type = adapterView.getItemAtPosition(i).toString();
                 defectTypeId = i + 1;
 
-                // Showing selected spinner item
-                Toast.makeText(adapterView.getContext(), "Selected: " + type, Toast.LENGTH_LONG).show();
             }
 
             @Override
@@ -175,7 +173,7 @@ public class AddDefectActivity extends AppCompatActivity {
 
     public void getAllPlacesForSpinner(List place) {
 
-        String URL = "http://192.168.1.116:8000/api/v1/places";
+        String URL = "http://87.246.222.194:8000/api/v1/places";
         Ion.with(AddDefectActivity.this).load(URL).asJsonArray().setCallback(new FutureCallback<JsonArray>() {
             @Override
             public void onCompleted(Exception e, JsonArray result) {
@@ -201,7 +199,7 @@ public class AddDefectActivity extends AppCompatActivity {
     public void getAllRoomsForSpinner(List room, int id) {
 
         String idString = Integer.toString(id);
-        String URL = "http://192.168.1.116:8000/api/v1/rooms/" + idString + "/place";
+        String URL = "http://87.246.222.194:8000/api/v1/rooms/" + idString + "/place";
         Ion.with(AddDefectActivity.this).load(URL).asJsonArray().setCallback(new FutureCallback<JsonArray>() {
             @Override
             public void onCompleted(Exception e, JsonArray result) {
@@ -226,7 +224,7 @@ public class AddDefectActivity extends AppCompatActivity {
 
     public void getUserId() {
 
-        String URL = "http://192.168.1.116:8000/api/v1/users/" + username + "/login";
+        String URL = "http://87.246.222.194:8000/api/v1/users/" + username + "/login";
         Ion.with(AddDefectActivity.this).load(URL).asJsonObject().setCallback(new FutureCallback<JsonObject>() {
             @Override
             public void onCompleted(Exception e, JsonObject result) {
@@ -242,32 +240,56 @@ public class AddDefectActivity extends AppCompatActivity {
     }
 
     public void addDefect() {
-        String URL = "http://192.168.1.116:8000/api/v1/defects";
+        String URL = "http://87.246.222.194:8000/api/v1/defects";
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        timestamp.setTime(timestamp.getTime() + (((60 * 60) + 0) * 1000));
 
+
+        System.out.println(idMarker);
         Ion.with(AddDefectActivity.this)
                 .load("POST", URL)
                 .setBodyParameter("defectType", String.valueOf(defectTypeId))
                 .setBodyParameter("idPlace", String.valueOf(idPlace))
                 .setBodyParameter("idUser", String.valueOf(idUser))
                 .setBodyParameter("idRoom", String.valueOf(idRoom))
-                .setBodyParameter("idMarker", "2")
+                .setBodyParameter("idMarker", String.valueOf(idMarker))
                 .setBodyParameter("defectState", "ForRepair")
                 .setBodyParameter("description", content)
-                .setBodyParameter("date", "2019-02-08 13:07:00")
+                .setBodyParameter("date", String.valueOf(timestamp))
                 .setBodyParameter("photoURL", "")
                 .asJsonObject()
                 .setCallback(new FutureCallback<JsonObject>() {
                     @Override
                     public void onCompleted(Exception e, JsonObject result) {
                         try {
-                            Toast.makeText(AddDefectActivity.this, "Hurra" + type, Toast.LENGTH_LONG).show();
+                            Toast.makeText(AddDefectActivity.this, "Hurra", Toast.LENGTH_LONG).show();
 
                         } catch (Exception erro) {
-                            Toast.makeText(AddDefectActivity.this, "Nie Hurra" + type, Toast.LENGTH_LONG).show();
+                            Toast.makeText(AddDefectActivity.this, "Nie Hurra", Toast.LENGTH_LONG).show();
 
                         }
                     }
                 });
+    }
+
+    public void getIdMarker() {
+
+        String idString = Integer.toString(idPlace);
+        String URL = "http://87.246.222.194:8000/api/v1/markers/" + idString + "/place";
+        Ion.with(AddDefectActivity.this).load(URL).asJsonArray().setCallback(new FutureCallback<JsonArray>() {
+            @Override
+            public void onCompleted(Exception e, JsonArray result) {
+                try {
+                    JsonObject cli = result.get(0).getAsJsonObject();
+                    idMarker = cli.get("id").getAsInt();
+
+                    //String id = result.get("id").getAsString();
+                } catch (Exception erro) {
+
+                }
+            }
+        });
+
     }
 }
 

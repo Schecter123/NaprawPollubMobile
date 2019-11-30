@@ -3,14 +3,11 @@ package com.example.naprawpollubmobile;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 
 import org.json.JSONException;
@@ -42,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         session = new SessionHandler(getApplicationContext());
-        login_url = "http://"+ getString(R.string.ip)+":8000/api/auth/login/";
+        login_url = "http://"+getString(R.string.ip)+":8000/api/auth/login/";
         try {
             if(session.isLoggedIn()){
                 loadDashboard();
@@ -58,23 +55,17 @@ public class MainActivity extends AppCompatActivity {
         Button register = findViewById(R.id.btnLoginRegister);
         Button login = findViewById(R.id.btnLogin);
 
-        register.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent i = new Intent(MainActivity.this, RegisterActivity.class);
-                startActivity(i);
-                finish();
-            }
+        register.setOnClickListener(v -> {
+            Intent i = new Intent(MainActivity.this, RegisterActivity.class);
+            startActivity(i);
+            finish();
         });
 
-        login.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                username = etUsername.getText().toString().toLowerCase().trim();
-                password = etPassword.getText().toString().trim();
-                if (validateInputs()) {
-                    login();
-                }
+        login.setOnClickListener(v -> {
+            username = etUsername.getText().toString().toLowerCase().trim();
+            password = etPassword.getText().toString().trim();
+            if (validateInputs()) {
+                login();
             }
         });
     }
@@ -130,7 +121,6 @@ public class MainActivity extends AppCompatActivity {
                 }, error -> {
                     pDialog.dismiss();
 
-                    //Display error message whenever an error occurs
                     Toast.makeText(getApplicationContext(),
                             error.getMessage(), Toast.LENGTH_SHORT).show();
 

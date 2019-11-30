@@ -76,7 +76,6 @@ public class AddDefectActivity extends AppCompatActivity {
         //TextView
         tvTest = findViewById(R.id.tvTest);
 
-
         //Button
         btnAddDefect = findViewById(R.id.btnAddDefect);
 

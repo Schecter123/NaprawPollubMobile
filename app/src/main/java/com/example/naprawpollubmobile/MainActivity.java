@@ -16,6 +16,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -34,14 +35,14 @@ public class MainActivity extends AppCompatActivity {
     private String username;
     private String password;
     private ProgressDialog pDialog;
-    private String login_url = "http://192.168.0.24:8000/api/auth/login/";
+    private String login_url;
     private SessionHandler session;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         session = new SessionHandler(getApplicationContext());
-
+        login_url = "http://"+ getString(R.string.ip)+":8000/api/auth/login/";
         try {
             if(session.isLoggedIn()){
                 loadDashboard();
@@ -105,40 +106,34 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         JsonObjectRequest jsArrayRequest = new JsonObjectRequest
-                (Request.Method.POST, login_url, request, new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        pDialog.dismiss();
-                        try {
-                            String expiresAt = response.getString(EXPIRES_AT);
-                            DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
-                            Date dateExpireToken = format.parse(expiresAt);
-                            Date dateNow = new Date();
-                            if (dateExpireToken.after(dateNow)) {
-                                session.loginUser(username, response);
-                                loadDashboard();
+                (Request.Method.POST, login_url, request, response -> {
+                    pDialog.dismiss();
+                    try {
+                        String expiresAt = response.getString(EXPIRES_AT);
+                        DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+                        Date dateExpireToken = format.parse(expiresAt);
+                        Date dateNow = new Date();
+                        if (dateExpireToken.after(dateNow)) {
+                            session.loginUser(username, response);
+                            loadDashboard();
 
-                            }else{
-                                Toast.makeText(getApplicationContext(),
-                                        response.getString(KEY_MESSAGE), Toast.LENGTH_SHORT).show();
+                        }else{
+                            Toast.makeText(getApplicationContext(),
+                                    response.getString(KEY_MESSAGE), Toast.LENGTH_SHORT).show();
 
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        } catch (ParseException e) {
-                            e.printStackTrace();
                         }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    } catch (ParseException e) {
+                        e.printStackTrace();
                     }
-                }, new Response.ErrorListener() {
+                }, error -> {
+                    pDialog.dismiss();
 
-                    public void onErrorResponse(VolleyError error) {
-                        pDialog.dismiss();
+                    //Display error message whenever an error occurs
+                    Toast.makeText(getApplicationContext(),
+                            error.getMessage(), Toast.LENGTH_SHORT).show();
 
-                        //Display error message whenever an error occurs
-                        Toast.makeText(getApplicationContext(),
-                                error.getMessage(), Toast.LENGTH_SHORT).show();
-
-                    }
                 });
 
         MySingleton.getInstance(this).addToRequestQueue(jsArrayRequest);

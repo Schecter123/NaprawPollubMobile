@@ -14,3 +14,4 @@
 .cxx
 app/src/main/java/com/example/naprawpollubmobile/MainActivity.java
 app/src/main/java/com/example/naprawpollubmobile/RegisterActivity.java
+app/build.gradle

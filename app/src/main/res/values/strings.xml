@@ -16,5 +16,5 @@
     <string name="email">E-mail</string>
     <string name="place">Wybierz miejsce usterki</string>
     <string name="type">Wybierz typ usterki</string>
-
+    <string name="ip">192.168.0.10</string>
 </resources>

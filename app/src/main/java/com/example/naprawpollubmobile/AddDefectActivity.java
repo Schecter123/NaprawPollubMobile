@@ -1,37 +1,39 @@
 package com.example.naprawpollubmobile;
 
 import androidx.appcompat.app.AppCompatActivity;
+import pub.devrel.easypermissions.EasyPermissions;
 
+import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
+import android.provider.MediaStore;
+import android.util.Base64;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 public class AddDefectActivity extends AppCompatActivity {
@@ -40,8 +42,9 @@ public class AddDefectActivity extends AppCompatActivity {
     private Spinner spinnerType;
     private Spinner spinnerRoom;
     private EditText etContent;
-    private TextView tvTest;
     private Button btnAddDefect;
+    private Button btnAddImage;
+    private ImageView imageView;
 
     private String place;
     private int idPlace;
@@ -54,6 +57,15 @@ public class AddDefectActivity extends AppCompatActivity {
     private int idMarker;
     private String content;
     private SessionHandler session;
+    private Bitmap bitmap;
+    private Uri fileUri;
+    private File file;
+    public static final String UPLOAD_URL = "http://192.168.1.116:8000/api/v1/images";
+    public static final String UPLOAD_KEY = "Image";
+    private static final int READ_REQUEST_CODE = 300;
+    public static final String TAG = "MY MESSAGE";
+    private int PICK_IMAGE_REQUEST = 1;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,17 +85,17 @@ public class AddDefectActivity extends AppCompatActivity {
         //EditText
         etContent = findViewById(R.id.etContent);
 
-        //TextView
-        tvTest = findViewById(R.id.tvTest);
-
-
-        //Button
+        //Buttons
         btnAddDefect = findViewById(R.id.btnAddDefect);
+        btnAddImage = findViewById(R.id.btnAddImage);
 
         // Spinner element
         spinnerPlace = findViewById(R.id.spinnerPlace);
         spinnerRoom = findViewById(R.id.spinnerRoom);
         spinnerType = findViewById(R.id.spinnerType);
+
+        //ImageView
+        imageView = findViewById(R.id.imageView);
 
         List<String> placeSp = new ArrayList<String>();
         getAllPlacesForSpinner(placeSp);
@@ -150,13 +162,95 @@ public class AddDefectActivity extends AppCompatActivity {
         btnAddDefect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                tvTest.setVisibility(View.VISIBLE);
                 content = etContent.getText().toString();
                 addDefect();
+                uploadImage();
+            }
+        });
+
+        btnAddImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (EasyPermissions.hasPermissions(AddDefectActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    showFileChooser();
+                } else {
+                    //If permission is not present request for the same.
+                    EasyPermissions.requestPermissions(AddDefectActivity.this, getString(R.string.read_file), READ_REQUEST_CODE, Manifest.permission.READ_EXTERNAL_STORAGE);
+                }
+
             }
         });
 
 
+    }
+
+    private void showFileChooser() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+
+            fileUri = data.getData();
+            try {
+                bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), fileUri);
+                imageView.setVisibility(View.VISIBLE);
+                imageView.setImageBitmap(bitmap);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public String getStringImage(Bitmap bmp) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bmp.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        byte[] imageBytes = baos.toByteArray();
+        String encodedImage = Base64.encodeToString(imageBytes, Base64.DEFAULT);
+        return encodedImage;
+    }
+
+    private void uploadImage() {
+        class UploadImage extends AsyncTask<Bitmap, Void, String> {
+
+            ProgressDialog loading;
+            RequestHandler rh = new RequestHandler();
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                loading = ProgressDialog.show(AddDefectActivity.this, "Uploading Image", "Please wait...", true, true);
+            }
+
+            @Override
+            protected void onPostExecute(String s) {
+                super.onPostExecute(s);
+                loading.dismiss();
+                Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            protected String doInBackground(Bitmap... params) {
+                Bitmap bitmap = params[0];
+                String uploadImage = getStringImage(bitmap);
+
+                HashMap<String, String> data = new HashMap<>();
+                data.put(UPLOAD_KEY, uploadImage);
+                data.put("idDefect", "2");
+
+                String result = rh.sendPostRequest(UPLOAD_URL, data);
+
+                return result;
+            }
+        }
+
+        UploadImage ui = new UploadImage();
+        ui.execute(bitmap);
     }
 
     public void setSpinnerType(List type) {
@@ -173,7 +267,7 @@ public class AddDefectActivity extends AppCompatActivity {
 
     public void getAllPlacesForSpinner(List place) {
 
-        String URL = "http://87.246.222.194:8000/api/v1/places";
+        String URL = "http://192.168.1.116:8000/api/v1/places";
         Ion.with(AddDefectActivity.this).load(URL).asJsonArray().setCallback(new FutureCallback<JsonArray>() {
             @Override
             public void onCompleted(Exception e, JsonArray result) {
@@ -199,7 +293,7 @@ public class AddDefectActivity extends AppCompatActivity {
     public void getAllRoomsForSpinner(List room, int id) {
 
         String idString = Integer.toString(id);
-        String URL = "http://87.246.222.194:8000/api/v1/rooms/" + idString + "/place";
+        String URL = "http://192.168.1.116:8000/api/v1/rooms/" + idString + "/place";
         Ion.with(AddDefectActivity.this).load(URL).asJsonArray().setCallback(new FutureCallback<JsonArray>() {
             @Override
             public void onCompleted(Exception e, JsonArray result) {
@@ -224,7 +318,7 @@ public class AddDefectActivity extends AppCompatActivity {
 
     public void getUserId() {
 
-        String URL = "http://87.246.222.194:8000/api/v1/users/" + username + "/login";
+        String URL = "http://192.168.1.116:8000/api/v1/users/" + username + "/login";
         Ion.with(AddDefectActivity.this).load(URL).asJsonObject().setCallback(new FutureCallback<JsonObject>() {
             @Override
             public void onCompleted(Exception e, JsonObject result) {
@@ -240,7 +334,7 @@ public class AddDefectActivity extends AppCompatActivity {
     }
 
     public void addDefect() {
-        String URL = "http://87.246.222.194:8000/api/v1/defects";
+        String URL = "http://192.168.1.116:8000/api/v1/defects";
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         timestamp.setTime(timestamp.getTime() + (((60 * 60) + 0) * 1000));
 
@@ -275,7 +369,7 @@ public class AddDefectActivity extends AppCompatActivity {
     public void getIdMarker() {
 
         String idString = Integer.toString(idPlace);
-        String URL = "http://87.246.222.194:8000/api/v1/markers/" + idString + "/place";
+        String URL = "http://192.168.1.116:8000/api/v1/markers/" + idString + "/place";
         Ion.with(AddDefectActivity.this).load(URL).asJsonArray().setCallback(new FutureCallback<JsonArray>() {
             @Override
             public void onCompleted(Exception e, JsonArray result) {

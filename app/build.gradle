@@ -19,8 +19,8 @@ android {
     }
 
     compileOptions {
-            sourceCompatibility JavaVersion.VERSION_1_8
-            targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
@@ -35,6 +35,8 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
     implementation 'com.koushikdutta.ion:ion:3.0.8'
+    //Easy permissions for handling Run time permissions
+    implementation 'pub.devrel:easypermissions:0.2.0'
 
 }
 

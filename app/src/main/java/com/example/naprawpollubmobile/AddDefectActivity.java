@@ -164,7 +164,7 @@ public class AddDefectActivity extends AppCompatActivity {
             public void onClick(View view) {
                 content = etContent.getText().toString();
                 addDefect();
-                uploadImage();
+                // uploadImage();
             }
         });
 
@@ -175,7 +175,7 @@ public class AddDefectActivity extends AppCompatActivity {
                     showFileChooser();
                 } else {
                     //If permission is not present request for the same.
-                    //EasyPermissions.requestPermissions(AddDefectActivity.this, getString(R.string.read_file), READ_REQUEST_CODE, Manifest.permission.READ_EXTERNAL_STORAGE);
+                    EasyPermissions.requestPermissions(AddDefectActivity.this, getString(R.string.read_file), READ_REQUEST_CODE, Manifest.permission.READ_EXTERNAL_STORAGE);
                 }
 
             }
@@ -267,7 +267,7 @@ public class AddDefectActivity extends AppCompatActivity {
 
     public void getAllPlacesForSpinner(List place) {
 
-        String URL = "http://192.168.1.116:8000/api/v1/places";
+        String URL = "http://" + getString(R.string.ip) + ":8000/api/v1/places";
         Ion.with(AddDefectActivity.this).load(URL).asJsonArray().setCallback(new FutureCallback<JsonArray>() {
             @Override
             public void onCompleted(Exception e, JsonArray result) {
@@ -293,7 +293,7 @@ public class AddDefectActivity extends AppCompatActivity {
     public void getAllRoomsForSpinner(List room, int id) {
 
         String idString = Integer.toString(id);
-        String URL = "http://192.168.1.116:8000/api/v1/rooms/" + idString + "/place";
+        String URL = "http://" + getString(R.string.ip) + ":8000/api/v1/rooms/" + idString + "/place";
         Ion.with(AddDefectActivity.this).load(URL).asJsonArray().setCallback(new FutureCallback<JsonArray>() {
             @Override
             public void onCompleted(Exception e, JsonArray result) {
@@ -318,7 +318,7 @@ public class AddDefectActivity extends AppCompatActivity {
 
     public void getUserId() {
 
-        String URL = "http://192.168.1.116:8000/api/v1/users/" + username + "/login";
+        String URL = "http://" + getString(R.string.ip) + ":8000/api/v1/users/" + username + "/login";
         Ion.with(AddDefectActivity.this).load(URL).asJsonObject().setCallback(new FutureCallback<JsonObject>() {
             @Override
             public void onCompleted(Exception e, JsonObject result) {
@@ -334,12 +334,17 @@ public class AddDefectActivity extends AppCompatActivity {
     }
 
     public void addDefect() {
-        String URL = "http://192.168.1.116:8000/api/v1/defects";
+        String URL = "http://" + getString(R.string.ip) + ":8000/api/v1/defects";
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         timestamp.setTime(timestamp.getTime() + (((60 * 60) + 0) * 1000));
 
-
+        System.out.println(defectTypeId);
+        System.out.println(idPlace);
+        System.out.println(idUser);
+        System.out.println(idRoom);
         System.out.println(idMarker);
+        System.out.println(content);
+        System.out.println(timestamp);
         Ion.with(AddDefectActivity.this)
                 .load("POST", URL)
                 .setBodyParameter("defectType", String.valueOf(defectTypeId))
@@ -369,7 +374,7 @@ public class AddDefectActivity extends AppCompatActivity {
     public void getIdMarker() {
 
         String idString = Integer.toString(idPlace);
-        String URL = "http://192.168.1.116:8000/api/v1/markers/" + idString + "/place";
+        String URL = "http://" + getString(R.string.ip) + ":8000/api/v1/markers/" + idString + "/place";
         Ion.with(AddDefectActivity.this).load(URL).asJsonArray().setCallback(new FutureCallback<JsonArray>() {
             @Override
             public void onCompleted(Exception e, JsonArray result) {

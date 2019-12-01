@@ -175,7 +175,7 @@ public class AddDefectActivity extends AppCompatActivity {
                     showFileChooser();
                 } else {
                     //If permission is not present request for the same.
-                    EasyPermissions.requestPermissions(AddDefectActivity.this, getString(R.string.read_file), READ_REQUEST_CODE, Manifest.permission.READ_EXTERNAL_STORAGE);
+                    //EasyPermissions.requestPermissions(AddDefectActivity.this, getString(R.string.read_file), READ_REQUEST_CODE, Manifest.permission.READ_EXTERNAL_STORAGE);
                 }
 
             }

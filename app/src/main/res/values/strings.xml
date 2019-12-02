@@ -18,4 +18,5 @@
     <string name="type">Wybierz typ usterki</string>
     <string name="ip">192.168.1.116</string>
     <string name="read_file">Aplikacja wymaga dostępu do pamięci wewnętrzenj</string>
+    <string name="title_activity_marker_map">Map</string>
 </resources>

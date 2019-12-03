@@ -38,6 +38,16 @@ public class DashboardActivity extends AppCompatActivity {
             }
         });
 
+        Button mapBtn = findViewById(R.id.btnDefectMap);
+
+        mapBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(DashboardActivity.this, MarkerMapActivity.class);
+                startActivity(i);
+            }
+        });
+
         Button logoutBtn = findViewById(R.id.btnLogout);
 
         logoutBtn.setOnClickListener(new View.OnClickListener() {
@@ -50,7 +60,7 @@ public class DashboardActivity extends AppCompatActivity {
             }
         });
 
-        Button listBtn =  findViewById(R.id.btnList);
+        Button listBtn = findViewById(R.id.btnList);
 
         listBtn.setOnClickListener(new View.OnClickListener() {
             @Override

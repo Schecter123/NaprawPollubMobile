@@ -23,6 +23,15 @@
         android:textColor="@android:color/white" />
 
     <Button
+        android:id="@+id/btnDefectMap"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:background="#aaa"
+        android:text="Mapa usterek"
+        android:textColor="@android:color/white" />
+
+    <Button
     android:id="@+id/btnLogout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"

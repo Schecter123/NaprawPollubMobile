@@ -1,15 +1,19 @@
 package com.example.naprawpollubmobile;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentActivity;
 import pub.devrel.easypermissions.EasyPermissions;
 
 import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.view.View;
@@ -18,9 +22,19 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.UiSettings;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.koushikdutta.async.future.FutureCallback;
@@ -36,7 +50,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class AddDefectActivity extends AppCompatActivity {
+public class AddDefectActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMyLocationClickListener, GoogleMap.OnMyLocationButtonClickListener {
 
     private Spinner spinnerPlace;
     private Spinner spinnerType;
@@ -44,7 +58,12 @@ public class AddDefectActivity extends AppCompatActivity {
     private EditText etContent;
     private Button btnAddDefect;
     private Button btnAddImage;
+    private Button btnTakeImage;
     private ImageView imageView;
+    private CustomScrollView myScrollView;
+    private MapFragment mapFragment;
+    private GoogleMap googleMap;
+
 
     private String place;
     private int idPlace;
@@ -65,6 +84,8 @@ public class AddDefectActivity extends AppCompatActivity {
     private static final int READ_REQUEST_CODE = 300;
     public static final String TAG = "MY MESSAGE";
     private int PICK_IMAGE_REQUEST = 1;
+    private int MAP_REQUEST = 1;
+    static final int REQUEST_IMAGE_CAPTURE = 1;
 
 
     @Override
@@ -88,14 +109,22 @@ public class AddDefectActivity extends AppCompatActivity {
         //Buttons
         btnAddDefect = findViewById(R.id.btnAddDefect);
         btnAddImage = findViewById(R.id.btnAddImage);
+        btnTakeImage = findViewById(R.id.btnTakeImage);
+
 
         // Spinner element
         spinnerPlace = findViewById(R.id.spinnerPlace);
         spinnerRoom = findViewById(R.id.spinnerRoom);
         spinnerType = findViewById(R.id.spinnerType);
 
-        //ImageView
+        //Map
+        mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+
+
+        //Views
         imageView = findViewById(R.id.imageView);
+        myScrollView = (CustomScrollView) findViewById(R.id.scrollView);
 
         List<String> placeSp = new ArrayList<String>();
         getAllPlacesForSpinner(placeSp);
@@ -106,6 +135,9 @@ public class AddDefectActivity extends AppCompatActivity {
         List<String> typeSp = new ArrayList<String>();
         setSpinnerType(typeSp);
 
+        //initializeMap();
+
+
         // Spinner click listener
         spinnerPlace.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -113,9 +145,17 @@ public class AddDefectActivity extends AppCompatActivity {
                 // On selecting a spinner item
                 place = ((Place) spinnerPlace.getSelectedItem()).getName();
                 idPlace = ((Place) spinnerPlace.getSelectedItem()).getId();
+                if (place.equals("Inne")) {
+                    mapFragment.getView().setVisibility(View.VISIBLE);
+                    spinnerRoom.setVisibility(View.GONE);
 
-                getIdMarker();
-                getAllRoomsForSpinner(roomSp, idPlace);
+                } else {
+                    getIdMarker();
+                    getAllRoomsForSpinner(roomSp, idPlace);
+                    mapFragment.getView().setVisibility(View.GONE);
+
+                }
+
             }
 
             @Override
@@ -181,6 +221,13 @@ public class AddDefectActivity extends AppCompatActivity {
             }
         });
 
+        btnTakeImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showCamera();
+            }
+        });
+
 
     }
 
@@ -189,6 +236,14 @@ public class AddDefectActivity extends AppCompatActivity {
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
+    }
+
+    private void showCamera() {
+
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+        }
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -204,7 +259,15 @@ public class AddDefectActivity extends AppCompatActivity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+
+            Bitmap photo = (Bitmap) data.getExtras().get("data");
+            imageView.setVisibility(View.VISIBLE);
+            imageView.setImageBitmap(photo);
+
         }
+
+
     }
 
     public String getStringImage(Bitmap bmp) {
@@ -252,6 +315,7 @@ public class AddDefectActivity extends AppCompatActivity {
         UploadImage ui = new UploadImage();
         ui.execute(bitmap);
     }
+
 
     public void setSpinnerType(List type) {
         type.add("Komputery");
@@ -389,6 +453,40 @@ public class AddDefectActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    @Override
+    public void onMapReady(GoogleMap map) {
+
+        if (EasyPermissions.hasPermissions(AddDefectActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+            googleMap = map;
+            UiSettings mapUiSettings = map.getUiSettings();
+            mapUiSettings.setZoomControlsEnabled(true);
+            LatLng center = new LatLng(51.236185, 22.548115);
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(center, 17));
+            map.setMyLocationEnabled(true);
+            map.setOnMyLocationClickListener(this);
+            map.setOnMyLocationButtonClickListener(this);
+
+        } else {
+            //If permission is not present request for the same.
+            EasyPermissions.requestPermissions(AddDefectActivity.this, getString(R.string.read_file), MAP_REQUEST, Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+    }
+
+    @Override
+    public void onMyLocationClick(@NonNull Location location) {
+        LatLng defectMarker = new LatLng(location.getLatitude(), location.getLongitude());
+        Marker marker = googleMap.addMarker(new MarkerOptions()
+                .position(defectMarker)
+                .draggable(true));
+        Toast.makeText(this, "Marker dodany", Toast.LENGTH_LONG).show();
+
+    }
+
+    @Override
+    public boolean onMyLocationButtonClick() {
+        return false;
     }
 }
 

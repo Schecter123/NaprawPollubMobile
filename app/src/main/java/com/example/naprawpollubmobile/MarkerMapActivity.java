@@ -8,6 +8,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -28,6 +29,7 @@ public class MarkerMapActivity extends FragmentActivity implements OnMapReadyCal
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_marker_map);
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -49,14 +51,20 @@ public class MarkerMapActivity extends FragmentActivity implements OnMapReadyCal
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+
+        UiSettings mapUiSettings = mMap.getUiSettings();
+        mapUiSettings.setZoomControlsEnabled(true);
+        mapUiSettings.setCompassEnabled(true);
+
         LatLng center = new LatLng(51.236185, 22.548115);
         // Constrain the camera target to the Adelaide bounds.
         mMap.setLatLngBoundsForCameraTarget(POLITECHNIKA);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(center, 17));
+        mMap.setMinZoomPreference(15);
+        mMap.setMaxZoomPreference(18);
         mClusterManager = new ClusterManager<MyItem>(this, mMap);
         mMap.setOnCameraIdleListener(mClusterManager);
         mMap.setOnMarkerClickListener(mClusterManager);
-
 
         //addItems();
         getAllDefects();

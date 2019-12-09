@@ -1,7 +1,6 @@
 package com.example.naprawpollubmobile;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentActivity;
 import pub.devrel.easypermissions.EasyPermissions;
 
@@ -13,7 +12,6 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.view.View;
@@ -22,14 +20,12 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.LatLng;
@@ -63,26 +59,27 @@ public class AddDefectActivity extends FragmentActivity implements OnMapReadyCal
     private CustomScrollView myScrollView;
     private MapFragment mapFragment;
     private GoogleMap googleMap;
-
-
-    private String place;
-    private int idPlace;
-    private String username;
-    private int idUser;
-    private String room;
-    private int idRoom;
-    private String type;
-    private int defectTypeId;
-    private int idMarker;
-    private String content;
     private SessionHandler session;
     private Bitmap bitmap;
     private Uri fileUri;
     private File file;
+    private Defect defect;
+    //Defect
+    private String place;
+    private String content;
+    private int idPlace;
+    private int idUser;
+    private String idRoom;
+    private int defectTypeId;
+    int idMarker;
+    //Markers
+    private double latitude;
+    private double longitude;
+    private String info;
+
     public static final String UPLOAD_URL = "http://192.168.1.116:8000/api/v1/images";
     public static final String UPLOAD_KEY = "Image";
     private static final int READ_REQUEST_CODE = 300;
-    public static final String TAG = "MY MESSAGE";
     private int PICK_IMAGE_REQUEST = 1;
     private int MAP_REQUEST = 1;
     static final int REQUEST_IMAGE_CAPTURE = 1;
@@ -100,7 +97,7 @@ public class AddDefectActivity extends FragmentActivity implements OnMapReadyCal
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        username = user.getUsername();
+        idUser = Integer.parseInt(user.getId());
 
 
         //EditText
@@ -150,7 +147,6 @@ public class AddDefectActivity extends FragmentActivity implements OnMapReadyCal
                     spinnerRoom.setVisibility(View.GONE);
 
                 } else {
-                    getIdMarker();
                     getAllRoomsForSpinner(roomSp, idPlace);
                     mapFragment.getView().setVisibility(View.GONE);
 
@@ -168,8 +164,7 @@ public class AddDefectActivity extends FragmentActivity implements OnMapReadyCal
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 // On selecting a spinner item
-                room = ((Room) spinnerRoom.getSelectedItem()).getName();
-                idRoom = ((Room) spinnerRoom.getSelectedItem()).getId();
+                idRoom = String.valueOf(((Room) spinnerRoom.getSelectedItem()).getId());
 
                 roomSp.clear();
             }
@@ -184,7 +179,6 @@ public class AddDefectActivity extends FragmentActivity implements OnMapReadyCal
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 // On selecting a spinner item
-                type = adapterView.getItemAtPosition(i).toString();
                 defectTypeId = i + 1;
 
             }
@@ -196,14 +190,24 @@ public class AddDefectActivity extends FragmentActivity implements OnMapReadyCal
             }
         });
 
-        getUserId();
+        //getUserId();
 
 
         btnAddDefect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 content = etContent.getText().toString();
-                addDefect();
+
+                if (place.equals("Inne")) {
+                    idRoom = "";
+                    addMarker();
+                    getLastIdMarker();
+                }
+                if (idMarker < 16) {
+                    getIdMarker();
+                    addDefect();
+                }
+
                 // uploadImage();
             }
         });
@@ -316,7 +320,6 @@ public class AddDefectActivity extends FragmentActivity implements OnMapReadyCal
         ui.execute(bitmap);
     }
 
-
     public void setSpinnerType(List type) {
         type.add("Komputery");
         type.add("Infrastruktora");
@@ -368,7 +371,6 @@ public class AddDefectActivity extends FragmentActivity implements OnMapReadyCal
                         ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(AddDefectActivity.this, android.R.layout.simple_spinner_item, room);
                         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                         spinnerRoom.setAdapter(dataAdapter);
-                        System.out.println(result);
 
                     }
                     //String id = result.get("id").getAsString();
@@ -380,41 +382,18 @@ public class AddDefectActivity extends FragmentActivity implements OnMapReadyCal
 
     }
 
-    public void getUserId() {
-
-        String URL = "http://" + getString(R.string.ip) + ":8000/api/v1/users/" + username + "/login";
-        Ion.with(AddDefectActivity.this).load(URL).asJsonObject().setCallback(new FutureCallback<JsonObject>() {
-            @Override
-            public void onCompleted(Exception e, JsonObject result) {
-                try {
-                    idUser = result.get("id").getAsInt();
-                } catch (Exception erro) {
-
-                }
-            }
-        });
-
-
-    }
 
     public void addDefect() {
         String URL = "http://" + getString(R.string.ip) + ":8000/api/v1/defects";
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         timestamp.setTime(timestamp.getTime() + (((60 * 60) + 0) * 1000));
 
-        System.out.println(defectTypeId);
-        System.out.println(idPlace);
-        System.out.println(idUser);
-        System.out.println(idRoom);
-        System.out.println(idMarker);
-        System.out.println(content);
-        System.out.println(timestamp);
         Ion.with(AddDefectActivity.this)
                 .load("POST", URL)
                 .setBodyParameter("defectType", String.valueOf(defectTypeId))
                 .setBodyParameter("idPlace", String.valueOf(idPlace))
                 .setBodyParameter("idUser", String.valueOf(idUser))
-                .setBodyParameter("idRoom", String.valueOf(idRoom))
+                .setBodyParameter("idRoom", idRoom)
                 .setBodyParameter("idMarker", String.valueOf(idMarker))
                 .setBodyParameter("defectState", "ForRepair")
                 .setBodyParameter("description", content)
@@ -435,6 +414,27 @@ public class AddDefectActivity extends FragmentActivity implements OnMapReadyCal
                 });
     }
 
+    public void addMarker() {
+        String URL = "http://" + getString(R.string.ip) + ":8000/api/v1/markers";
+        Ion.with(AddDefectActivity.this)
+                .load("POST", URL)
+                .setBodyParameter("latitude", String.valueOf(latitude))
+                .setBodyParameter("longitude", String.valueOf(longitude))
+                .setBodyParameter("idPlace", "17")
+                .setBodyParameter("info", "Szczegóły usterki")
+                .asJsonObject()
+                .setCallback(new FutureCallback<JsonObject>() {
+                    @Override
+                    public void onCompleted(Exception e, JsonObject result) {
+                        try {
+                        } catch (Exception erro) {
+
+                        }
+                    }
+                });
+
+    }
+
     public void getIdMarker() {
 
         String idString = Integer.toString(idPlace);
@@ -450,6 +450,23 @@ public class AddDefectActivity extends FragmentActivity implements OnMapReadyCal
                 } catch (Exception erro) {
 
                 }
+            }
+        });
+
+    }
+
+
+    public void getLastIdMarker() {
+        String URL = "http://" + getString(R.string.ip) + ":8000/api/v1/last/markers";
+        Ion.with(AddDefectActivity.this).load(URL).asJsonArray().setCallback(new FutureCallback<JsonArray>() {
+            @Override
+            public void onCompleted(Exception e, JsonArray result) {
+                JsonObject cli = result.get(0).getAsJsonObject();
+                idMarker = cli.get("lastIdMarker").getAsInt();
+                System.out.println(idMarker);
+                addDefect();
+
+
             }
         });
 
@@ -476,7 +493,7 @@ public class AddDefectActivity extends FragmentActivity implements OnMapReadyCal
 
     @Override
     public void onMyLocationClick(@NonNull Location location) {
-        LatLng defectMarker = new LatLng(location.getLatitude(), location.getLongitude());
+        LatLng defectMarker = new LatLng(latitude = location.getLatitude(), longitude = location.getLongitude());
         Marker marker = googleMap.addMarker(new MarkerOptions()
                 .position(defectMarker)
                 .draggable(true));

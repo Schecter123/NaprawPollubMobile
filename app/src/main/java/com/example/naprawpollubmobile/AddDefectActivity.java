@@ -6,9 +6,12 @@ import pub.devrel.easypermissions.EasyPermissions;
 
 import android.Manifest;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -29,6 +32,7 @@ import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.JsonArray;
@@ -46,7 +50,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class AddDefectActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMyLocationClickListener, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMapLongClickListener {
+public class AddDefectActivity extends FragmentActivity implements LocationListener, OnMapReadyCallback, GoogleMap.OnMyLocationClickListener, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMapLongClickListener {
 
     private Spinner spinnerPlace;
     private Spinner spinnerType;
@@ -63,7 +67,8 @@ public class AddDefectActivity extends FragmentActivity implements OnMapReadyCal
     private Bitmap bitmap;
     private Uri fileUri;
     private File file;
-    private Defect defect;
+    LocationManager locationManager;
+
     //Defect
     private String place;
     private String content;
@@ -75,7 +80,8 @@ public class AddDefectActivity extends FragmentActivity implements OnMapReadyCal
     //Markers
     private double latitude;
     private double longitude;
-    private String info;
+    private double userLatitude;
+    private double userLongitude;
 
     public static final String UPLOAD_URL = "http://192.168.1.116:8000/api/v1/images";
     public static final String UPLOAD_KEY = "Image";
@@ -83,6 +89,9 @@ public class AddDefectActivity extends FragmentActivity implements OnMapReadyCal
     private int PICK_IMAGE_REQUEST = 1;
     private int MAP_REQUEST = 1;
     static final int REQUEST_IMAGE_CAPTURE = 1;
+
+    private LatLngBounds POLITECHNIKA = new LatLngBounds(
+            new LatLng(51.234801, 22.545508), new LatLng(51.237139, 22.550207));
     private Marker marker;
 
 
@@ -481,9 +490,20 @@ public class AddDefectActivity extends FragmentActivity implements OnMapReadyCal
             UiSettings mapUiSettings = map.getUiSettings();
             mapUiSettings.setZoomControlsEnabled(true);
             LatLng center = new LatLng(51.236185, 22.548115);
+            LatLng user = new LatLng(userLatitude, userLongitude);
+            map.setLatLngBoundsForCameraTarget(POLITECHNIKA);
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(center, 17));
 
-            map.setMyLocationEnabled(true);
+            if (POLITECHNIKA.contains(user)) {
+                System.out.println("Yup");
+                map.setMyLocationEnabled(true);
+            } else {
+                System.out.println("Nope");
+                map.setMyLocationEnabled(false);
+            }
+
+
+            getLocation();
             map.setOnMyLocationClickListener(this);
             map.setOnMyLocationButtonClickListener(this);
 
@@ -494,6 +514,36 @@ public class AddDefectActivity extends FragmentActivity implements OnMapReadyCal
             //If permission is not present request for the same.
             EasyPermissions.requestPermissions(AddDefectActivity.this, getString(R.string.read_file), MAP_REQUEST, Manifest.permission.ACCESS_FINE_LOCATION);
         }
+    }
+
+    void getLocation() {
+        try {
+            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 5, (LocationListener) this);
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        userLatitude = location.getLatitude();
+        userLongitude = location.getLongitude();
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+        Toast.makeText(AddDefectActivity.this, "Please Enable GPS and Internet", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+
     }
 
     @Override

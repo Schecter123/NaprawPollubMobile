@@ -46,7 +46,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class AddDefectActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMyLocationClickListener, GoogleMap.OnMyLocationButtonClickListener {
+public class AddDefectActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMyLocationClickListener, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMapLongClickListener {
 
     private Spinner spinnerPlace;
     private Spinner spinnerType;
@@ -83,6 +83,7 @@ public class AddDefectActivity extends FragmentActivity implements OnMapReadyCal
     private int PICK_IMAGE_REQUEST = 1;
     private int MAP_REQUEST = 1;
     static final int REQUEST_IMAGE_CAPTURE = 1;
+    private Marker marker;
 
 
     @Override
@@ -481,9 +482,13 @@ public class AddDefectActivity extends FragmentActivity implements OnMapReadyCal
             mapUiSettings.setZoomControlsEnabled(true);
             LatLng center = new LatLng(51.236185, 22.548115);
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(center, 17));
+
             map.setMyLocationEnabled(true);
             map.setOnMyLocationClickListener(this);
             map.setOnMyLocationButtonClickListener(this);
+
+            map.setOnMapLongClickListener(this);
+
 
         } else {
             //If permission is not present request for the same.
@@ -494,9 +499,16 @@ public class AddDefectActivity extends FragmentActivity implements OnMapReadyCal
     @Override
     public void onMyLocationClick(@NonNull Location location) {
         LatLng defectMarker = new LatLng(latitude = location.getLatitude(), longitude = location.getLongitude());
-        Marker marker = googleMap.addMarker(new MarkerOptions()
-                .position(defectMarker)
-                .draggable(true));
+        if (marker != null) {
+            marker.remove();
+            marker = googleMap.addMarker(new MarkerOptions()
+                    .position(defectMarker)
+                    .draggable(true));
+        } else {
+            marker = googleMap.addMarker(new MarkerOptions()
+                    .position(defectMarker)
+                    .draggable(true));
+        }
         Toast.makeText(this, "Marker dodany", Toast.LENGTH_LONG).show();
 
     }
@@ -504,6 +516,24 @@ public class AddDefectActivity extends FragmentActivity implements OnMapReadyCal
     @Override
     public boolean onMyLocationButtonClick() {
         return false;
+    }
+
+    @Override
+    public void onMapLongClick(LatLng latLng) {
+        if (marker != null) {
+            marker.remove();
+            latitude = latLng.latitude;
+            longitude = latLng.longitude;
+            marker = googleMap.addMarker(new MarkerOptions()
+                    .position(latLng)
+                    .draggable(true));
+        } else {
+            latitude = latLng.latitude;
+            longitude = latLng.longitude;
+            marker = googleMap.addMarker(new MarkerOptions()
+                    .position(latLng)
+                    .draggable(true));
+        }
     }
 }
 

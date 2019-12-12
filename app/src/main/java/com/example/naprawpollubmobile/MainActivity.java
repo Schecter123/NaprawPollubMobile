@@ -68,7 +68,6 @@ public class MainActivity extends AppCompatActivity {
         register.setOnClickListener(v -> {
             Intent i = new Intent(MainActivity.this, RegisterActivity.class);
             startActivity(i);
-            finish();
         });
 
         login.setOnClickListener(v -> {

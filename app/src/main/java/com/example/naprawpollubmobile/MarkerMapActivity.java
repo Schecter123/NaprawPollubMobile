@@ -99,10 +99,9 @@ public class MarkerMapActivity extends FragmentActivity implements OnMapReadyCal
                 try {
                     for (int i = 0; i < result.size(); i++) {
                         JsonObject cli = result.get(i).getAsJsonObject();
-                        if (cli.get("idPlace").getAsInt() < 17) {
-                            idPlace = cli.get("idPlace").getAsInt();
-                            setAllMarkers(cli.get("idPlace").getAsInt());
-                        }
+                        idPlace = cli.get("idPlace").getAsInt();
+                        setAllMarkers(cli.get("idPlace").getAsInt());
+
                     }
                 } catch (Exception erro) {
 

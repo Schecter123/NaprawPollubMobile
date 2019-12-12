@@ -56,7 +56,6 @@ public class DashboardActivity extends AppCompatActivity {
                 session.logoutUser();
                 Intent i = new Intent(DashboardActivity.this, MainActivity.class);
                 startActivity(i);
-                finish();
             }
         });
 
@@ -67,7 +66,6 @@ public class DashboardActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent i = new Intent(DashboardActivity.this, DefectListActivity.class);
                 startActivity(i);
-                finish();
             }
         });
     }

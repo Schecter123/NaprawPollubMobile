@@ -72,6 +72,7 @@ public class AddDefectActivity extends FragmentActivity implements LocationListe
     //Defect
     private String place;
     private String content;
+    private String username;
     private int idPlace;
     private int idUser;
     private String idRoom;
@@ -104,11 +105,13 @@ public class AddDefectActivity extends FragmentActivity implements LocationListe
         User user = null;
         try {
             user = session.getUserDetails();
+            username = user.getUsername();
+            getUserId();
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        idUser = Integer.parseInt(user.getId());
-
+        username = user.getUsername();
+        System.out.println(username);
 
         //EditText
         etContent = findViewById(R.id.etContent);
@@ -141,6 +144,7 @@ public class AddDefectActivity extends FragmentActivity implements LocationListe
 
         List<String> typeSp = new ArrayList<String>();
         setSpinnerType(typeSp);
+
 
         //initializeMap();
 
@@ -207,7 +211,6 @@ public class AddDefectActivity extends FragmentActivity implements LocationListe
             @Override
             public void onClick(View view) {
                 content = etContent.getText().toString();
-
                 if (place.equals("Inne")) {
                     idRoom = "";
                     addMarker();
@@ -445,6 +448,21 @@ public class AddDefectActivity extends FragmentActivity implements LocationListe
 
     }
 
+    public void getUserId() {
+
+        String URL = "http://" + getString(R.string.ip) + ":8000/api/v1/users/" + username + "/login";
+        Ion.with(AddDefectActivity.this).load(URL).asJsonObject().setCallback(new FutureCallback<JsonObject>() {
+            @Override
+            public void onCompleted(Exception e, JsonObject result) {
+                try {
+                    idUser = result.get("id").getAsInt();
+                } catch (Exception erro) {
+
+                }
+            }
+        });
+    }
+
     public void getIdMarker() {
 
         String idString = Integer.toString(idPlace);
@@ -473,7 +491,6 @@ public class AddDefectActivity extends FragmentActivity implements LocationListe
             public void onCompleted(Exception e, JsonArray result) {
                 JsonObject cli = result.get(0).getAsJsonObject();
                 idMarker = cli.get("lastIdMarker").getAsInt();
-                System.out.println(idMarker);
                 addDefect();
 
 
@@ -495,10 +512,8 @@ public class AddDefectActivity extends FragmentActivity implements LocationListe
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(center, 17));
 
             if (POLITECHNIKA.contains(user)) {
-                System.out.println("Yup");
                 map.setMyLocationEnabled(true);
             } else {
-                System.out.println("Nope");
                 map.setMyLocationEnabled(false);
             }
 

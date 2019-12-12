@@ -211,16 +211,20 @@ public class AddDefectActivity extends FragmentActivity implements LocationListe
             @Override
             public void onClick(View view) {
                 content = etContent.getText().toString();
-                if (place.equals("Inne")) {
-                    idRoom = "";
-                    addMarker();
-                    getLastIdMarker();
+                if (validateContent()) {
+                    if (place.equals("Inne")) {
+                        if (validateMarker()) {
+                            idRoom = "";
+                            addMarker();
+                            getLastIdMarker();
+                        }
+                    } else {
+                        {
+                            getIdMarker();
+                            addDefect();
+                        }
+                    }
                 }
-                if (idMarker < 16) {
-                    getIdMarker();
-                    addDefect();
-                }
-
                 // uploadImage();
             }
         });
@@ -447,6 +451,25 @@ public class AddDefectActivity extends FragmentActivity implements LocationListe
                 });
 
     }
+
+    private boolean validateContent() {
+        if (content.equals("")) {
+            etContent.setError("Opis usterki nie może być pusty");
+            etContent.requestFocus();
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean validateMarker() {
+        if (latitude < 1 && longitude < 1) {
+            Toast.makeText(getApplicationContext(), "Trzeba wskazać miejsce usterki", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
+    }
+
 
     public void getUserId() {
 

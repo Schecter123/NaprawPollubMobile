@@ -67,7 +67,8 @@ public class MarkerMapActivity extends FragmentActivity implements OnMapReadyCal
         mMap.setOnMarkerClickListener(mClusterManager);
 
         //addItems();
-        getAllDefects();
+        //getAllDefects();
+        setAllMarkers();
         mClusterManager.cluster();
 
 
@@ -89,7 +90,7 @@ public class MarkerMapActivity extends FragmentActivity implements OnMapReadyCal
         }
     }
 
-    public void getAllDefects() {
+   /* public void getAllDefects() {
 
         String URL = "http://" + getString(R.string.ip) + ":8000/api/v1/defects";
 
@@ -108,10 +109,10 @@ public class MarkerMapActivity extends FragmentActivity implements OnMapReadyCal
                 }
             }
         });
-    }
+    }*/
 
-    public void setAllMarkers(int id) {
-        String URL = "http://" + getString(R.string.ip) + ":8000/api/v1/markers/" + id + "/place";
+    public void setAllMarkers() {
+        String URL = "http://" + getString(R.string.ip) + ":8000/api/v1/all/markers";
         Ion.with(MarkerMapActivity.this).load(URL).asJsonArray().setCallback(new FutureCallback<JsonArray>() {
             @Override
             public void onCompleted(Exception e, JsonArray result) {
@@ -120,6 +121,7 @@ public class MarkerMapActivity extends FragmentActivity implements OnMapReadyCal
                         JsonObject cli = result.get(i).getAsJsonObject();
                         MyItem offsetItem = new MyItem(cli.get("latitude").getAsDouble(), cli.get("longitude").getAsDouble());
                         mClusterManager.addItem(offsetItem);
+                        System.out.println(result);
 
                     }
 

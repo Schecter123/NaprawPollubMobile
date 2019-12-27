@@ -18,12 +18,13 @@ import com.koushikdutta.ion.Ion;
 
 import org.json.JSONArray;
 
+import java.lang.reflect.Type;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.lang.reflect.Type;
 
-public class DefectListActivity extends AppCompatActivity {
+public class UserDefectListActivity extends AppCompatActivity {
+
     private boolean isLoaded;
     private String login_url;
     private SessionHandler session;
@@ -34,20 +35,26 @@ public class DefectListActivity extends AppCompatActivity {
     List<Room> rooms = new ArrayList<Room>();
     List<Defect> defects = new ArrayList<Defect>();
     ListView listView;
+    User user = null;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_defect_list);
-        login_url = "http://"+getString(R.string.ip)+":8000/api/v1/defects";
+        login_url = "http://" + getString(R.string.ip) + ":8000/api/v1/defects";
         isLoaded = false;
-        listView = (ListView)findViewById(R.id.defectsList);
+        listView = (ListView) findViewById(R.id.defectsList);
 
         session = new SessionHandler(getApplicationContext());
+        String id;
 
         try {
-            if(session.isLoggedIn()){
-                loadDefects(places, rooms);
+            if (session.isLoggedIn()) {
+                user = session.getUserDetails();
+                loadDefects(places, rooms, user.getUsername());
+
+
             }
         } catch (ParseException e) {
             e.printStackTrace();
@@ -57,7 +64,7 @@ public class DefectListActivity extends AppCompatActivity {
     public void getAllPlaces(List placesL) {
 
         String URL = "http://" + getString(R.string.ip) + ":8000/api/v1/places";
-        Ion.with(DefectListActivity.this).load(URL).asJsonArray().setCallback(new FutureCallback<JsonArray>() {
+        Ion.with(UserDefectListActivity.this).load(URL).asJsonArray().setCallback(new FutureCallback<JsonArray>() {
             @Override
             public void onCompleted(Exception e, JsonArray result) {
                 try {
@@ -65,11 +72,9 @@ public class DefectListActivity extends AppCompatActivity {
                         JsonObject cli = result.get(i).getAsJsonObject();
                         placesL.add(new Place(cli.get("id").getAsInt(), cli.get("name").getAsString()));
                     }
-                    if(isLoaded)
-                    {
+                    if (isLoaded) {
                         prepareArrayList();
-                    }
-                    else {
+                    } else {
                         isLoaded = true;
                     }
                     //String id = result.get("id").getAsString();
@@ -84,17 +89,15 @@ public class DefectListActivity extends AppCompatActivity {
     public void getAllRooms(List roomsL) {
 
         String URL = "http://" + getString(R.string.ip) + ":8000/api/v1/rooms";
-        Ion.with(DefectListActivity.this).load(URL).asJsonArray().setCallback((e, result) -> {
+        Ion.with(UserDefectListActivity.this).load(URL).asJsonArray().setCallback((e, result) -> {
             try {
                 for (int i = 0; i < result.size(); i++) {
                     JsonObject cli = result.get(i).getAsJsonObject();
                     roomsL.add(new Room(cli.get("id").getAsInt(), cli.get("name").getAsString()));
                 }
-                if(isLoaded)
-                {
+                if (isLoaded) {
                     prepareArrayList();
-                }
-                else {
+                } else {
                     isLoaded = true;
                 }
             } catch (Exception erro) {
@@ -105,47 +108,44 @@ public class DefectListActivity extends AppCompatActivity {
     }
 
     private void prepareArrayList() {
-        for (int i = 0; i <defectsList.size(); i++){
+        for (int i = 0; i < defectsList.size(); i++) {
             int placeId = Integer.parseInt(defectsList.get(i).idPlace);
             String t1 = places.get(placeId - 1).name;
             String t2 = "";
             int roomId;
             try {
                 roomId = Integer.parseInt(defectsList.get(i).idRoom);
-                 t2 = rooms.get(roomId - 1).name;
-            }
-            catch (NumberFormatException ex){
-                int adgfgg=11;
+                t2 = rooms.get(roomId - 1).name;
+            } catch (NumberFormatException ex) {
+                int adgfgg = 11;
             }
             defectsForList.add(new DefectForList(t1, t2, defectsList.get(i).defectType, defectsList.get(i).description));  //defectsList.get(i).idPlace)
         }
 
-        CustomAdapter myCustomAdapter = new CustomAdapter(DefectListActivity.this, defectsForList);
+        CustomAdapter myCustomAdapter = new CustomAdapter(UserDefectListActivity.this, defectsForList);
         listView.setAdapter(myCustomAdapter);
     }
 
-    private void loadDefects(List places, List rooms) {
+    private void loadDefects(List places, List rooms, String login) {
         setTimeout(() -> System.out.println("test"), 1000);
-
         displayLoader();
         JSONArray request = new JSONArray();
 
         JsonArrayRequest jsonObjectRequest = new JsonArrayRequest
-                (Request.Method.GET, login_url, request, response -> {
+                (Request.Method.GET, "http://" + getString(R.string.ip) + ":8000/api/v1/defects/" + login + "/login", request, response -> {
                     int a = 10;
 
                     Gson gson = new Gson();
-                    Type type = new TypeToken<List<Defect>>(){}.getType();
+                    Type type = new TypeToken<List<Defect>>() {
+                    }.getType();
                     try {
                         defectsList = gson.fromJson(response.toString(), type);
 
-                        if(defectsList.size() > 0)
-                        {
+                        if (defectsList.size() > 0) {
                             getAllPlaces(places);
                             getAllRooms(rooms);
                         }
-                }
-                    catch (Exception e){
+                    } catch (Exception e) {
                         int bb = 10;
                     }
                     int b = 10;
@@ -162,20 +162,19 @@ public class DefectListActivity extends AppCompatActivity {
     }
 
     private void displayLoader() {
-        pDialog = new ProgressDialog(DefectListActivity.this);
+        pDialog = new ProgressDialog(UserDefectListActivity.this);
         pDialog.setMessage("Ładowanie usterek");
         pDialog.setIndeterminate(false);
         pDialog.setCancelable(false);
         pDialog.show();
     }
 
-    public static void setTimeout(Runnable runnable, int delay){
+    public static void setTimeout(Runnable runnable, int delay) {
         new Thread(() -> {
             try {
                 Thread.sleep(delay);
                 runnable.run();
-            }
-            catch (Exception e){
+            } catch (Exception e) {
                 System.err.println(e);
             }
         }).start();

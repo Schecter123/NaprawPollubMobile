@@ -26,6 +26,8 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -41,14 +43,21 @@ import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 public class AddDefectActivity extends FragmentActivity implements LocationListener, OnMapReadyCallback, GoogleMap.OnMyLocationClickListener, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMapLongClickListener {
 
@@ -68,6 +77,8 @@ public class AddDefectActivity extends FragmentActivity implements LocationListe
     private Uri fileUri;
     private File file;
     LocationManager locationManager;
+    private ProgressDialog pDialog;
+
 
     //Defect
     private String place;
@@ -111,7 +122,6 @@ public class AddDefectActivity extends FragmentActivity implements LocationListe
             e.printStackTrace();
         }
         username = user.getUsername();
-        System.out.println(username);
 
         //EditText
         etContent = findViewById(R.id.etContent);
@@ -163,6 +173,8 @@ public class AddDefectActivity extends FragmentActivity implements LocationListe
                 } else {
                     getAllRoomsForSpinner(roomSp, idPlace);
                     mapFragment.getView().setVisibility(View.GONE);
+                    roomSp.clear();
+
 
                 }
 
@@ -180,7 +192,6 @@ public class AddDefectActivity extends FragmentActivity implements LocationListe
                 // On selecting a spinner item
                 idRoom = String.valueOf(((Room) spinnerRoom.getSelectedItem()).getId());
 
-                roomSp.clear();
             }
 
             @Override
@@ -216,12 +227,12 @@ public class AddDefectActivity extends FragmentActivity implements LocationListe
                         if (validateMarker()) {
                             idRoom = "";
                             addMarker();
-                            getLastIdMarker();
+
                         }
                     } else {
                         {
                             getIdMarker();
-                            addDefect();
+
                         }
                     }
                 }
@@ -297,6 +308,15 @@ public class AddDefectActivity extends FragmentActivity implements LocationListe
         byte[] imageBytes = baos.toByteArray();
         String encodedImage = Base64.encodeToString(imageBytes, Base64.DEFAULT);
         return encodedImage;
+    }
+
+    private void displayLoader() {
+        pDialog = new ProgressDialog(AddDefectActivity.this);
+        pDialog.setMessage("Dodawanie usterki");
+        pDialog.setIndeterminate(false);
+        pDialog.setCancelable(false);
+        pDialog.show();
+
     }
 
     private void uploadImage() {
@@ -385,6 +405,7 @@ public class AddDefectActivity extends FragmentActivity implements LocationListe
                     for (int i = 0; i < result.size(); i++) {
                         JsonObject cli = result.get(i).getAsJsonObject();
                         room.add(new Room(cli.get("id").getAsInt(), cli.get("name").getAsString()));
+
                         ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(AddDefectActivity.this, android.R.layout.simple_spinner_item, room);
                         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                         spinnerRoom.setAdapter(dataAdapter);
@@ -401,6 +422,7 @@ public class AddDefectActivity extends FragmentActivity implements LocationListe
 
 
     public void addDefect() {
+        displayLoader();
         String URL = "http://" + getString(R.string.ip) + ":8000/api/v1/defects";
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         timestamp.setTime(timestamp.getTime() + (((60 * 60) + 0) * 1000));
@@ -421,14 +443,19 @@ public class AddDefectActivity extends FragmentActivity implements LocationListe
                     @Override
                     public void onCompleted(Exception e, JsonObject result) {
                         try {
-                            Toast.makeText(AddDefectActivity.this, "Hurra", Toast.LENGTH_LONG).show();
+                            Toast.makeText(AddDefectActivity.this, "Dodano usterkę", Toast.LENGTH_LONG).show();
+                            Intent i = new Intent(AddDefectActivity.this, UserDefectListActivity.class);
+                            startActivity(i);
+                            finish();
+
 
                         } catch (Exception erro) {
-                            Toast.makeText(AddDefectActivity.this, "Nie Hurra", Toast.LENGTH_LONG).show();
+                            Toast.makeText(AddDefectActivity.this, "Nie dodano usterkę", Toast.LENGTH_LONG).show();
 
                         }
                     }
                 });
+
     }
 
     public void addMarker() {
@@ -444,6 +471,7 @@ public class AddDefectActivity extends FragmentActivity implements LocationListe
                     @Override
                     public void onCompleted(Exception e, JsonObject result) {
                         try {
+                            getLastIdMarker();
                         } catch (Exception erro) {
 
                         }
@@ -496,6 +524,7 @@ public class AddDefectActivity extends FragmentActivity implements LocationListe
                 try {
                     JsonObject cli = result.get(0).getAsJsonObject();
                     idMarker = cli.get("id").getAsInt();
+                    addDefect();
 
                     //String id = result.get("id").getAsString();
                 } catch (Exception erro) {

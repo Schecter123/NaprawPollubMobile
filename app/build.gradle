@@ -40,6 +40,8 @@ dependencies {
     //Easy permissions for handling Run time permissions
     implementation 'pub.devrel:easypermissions:0.2.0'
     implementation 'com.google.maps.android:android-maps-utils:0.5'
+    implementation 'com.google.android.material:material:1.0.0'
+    implementation "com.leinardi.android:speed-dial:2.0.0"
 
 
 }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="user_link" type="id" />
+    <item name="defect_link" type="id" />
+    <item name="map_link" type="id"/>
+    <item name="userList_link" type="id"/>
+    <item name="list_link" type="id"/>
+
+</resources>
